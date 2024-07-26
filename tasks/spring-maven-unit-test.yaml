@@ -24,7 +24,7 @@ outputs:
 # What do we want this task to do?
 # Tell Concourse the commands it should execute, in this Task
 run:
-  path: /bin/sh
+  path: /bin/bash
   args:
     - -c
     - |
