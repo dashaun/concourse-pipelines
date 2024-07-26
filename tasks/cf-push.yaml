@@ -1,9 +1,25 @@
----
+resource_types:
+  - name: cf-cli-resource
+    type: registry-image
+    source:
+      repository: nulldriver/cf-cli-resource
+      tag: latest
+
+resources:
+  - name: cloud-foundry
+    type: cf-cli-resource
+    source:
+      api: https://api.example.com
+      username: name@example.com
+      password: my password
+      cf_cli_version: 8
+
 # Task definition
 
 platform: linux
 container_limits: {}
 
+# Use the 'maven:3.6.3' image from Docker Hub
 image_resource:
   type: registry-image
   source:
@@ -16,7 +32,7 @@ caches:
 
 # We will provide an input called 'src' to this Task
 inputs:
-  - name: source-repo
+  - name: repo
 outputs:
   - name: build
 
@@ -33,4 +49,4 @@ run:
       source "/root/.sdkman/bin/sdkman-init.sh"
       cd repo
       sdk env install
-      ./mvnw clean test
+      ./mvnw clean package
