@@ -9,7 +9,7 @@ image_resource:
   type: registry-image
   source:
     repository: maven
-    tag: 3.6.3
+    tag: latest
 
 # Cache the Maven repository directory
 caches:
@@ -17,7 +17,7 @@ caches:
 
 # We will provide an input called 'src' to this Task
 inputs:
-  - name: git
+  - name: repo
 outputs:
   - name: build
 
