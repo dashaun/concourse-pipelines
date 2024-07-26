@@ -1,0 +1,33 @@
+# fly -t kaiju set-pipeline -p spring-maven -c sample-pipelines/spring-maven.yaml --team javagrunt-com
+# fly -t kaiju trigger-job --job spring-maven/repo-exists --watch --team javagrunt-com
+# fly -t kaiju set-pipeline -p vmware-app-analyzer-upgrades -c sample-pipelines/spring-maven.yaml --team pivotal-cf --var=organization-name=pivotal-cf --var=repository-name=vmware-app-analyzer-upgrades --var=private-key=$(cat ~/.ssh/id_rsa)
+
+resources:
+  - name: concourse-pipelines
+    icon: github
+    type: git
+    source:
+      uri: https://github.com/dashaun/concourse-pipelines
+      branch: main
+      git_config:
+        - name: safe.directory
+          value: '*'
+  - name: source-repo
+    type: git
+    source:
+      uri: git@github.com:((organization-name))/((repository-name)).git
+      branch: main
+      private_key: ((private-key))
+      git_config:
+        - name: safe.directory
+          value: '*'
+jobs:
+  - name: unit
+    plan:
+      - in_parallel:
+        - get: source-repo
+          version: latest # Just process the latest Git commit, not every commit (this is the default setting)
+          trigger: true # Trigger this job whenever Concourse detects a new Resource version (i.e. a new Git commit)
+        - get: concourse-pipelines
+      - task: run-unit-tests
+        file: concourse-pipelines/tasks/spring-maven-unit-test.yaml

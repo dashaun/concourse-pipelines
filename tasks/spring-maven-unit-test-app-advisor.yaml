@@ -35,4 +35,4 @@ run:
       cd source-repo
       sdk install java 17.0.11-librca
       sdk install java 21.0.2-graalce
-      ./mvnw clean test
+      ./gradlew :cli:nativeCompile
