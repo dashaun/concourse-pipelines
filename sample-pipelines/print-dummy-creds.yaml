@@ -1,0 +1,31 @@
+# fly -t kaiju set-pipeline -p print-dummy-creds -c sample-pipelines/print-dummy-creds.yaml --team javagrunt-com
+# fly -t kaiju trigger-job --job print-dummy-creds/print-creds --watch --team javagrunt-com
+var_sources:
+  - name: dumb
+    type: dummy
+    config:
+      vars:
+        simple: hello!
+        user:
+          username: big
+          password: sekrit
+
+jobs:
+  - name: print-creds
+    plan:
+      - task: print
+        config:
+          platform: linux
+          
+          image_resource:
+            type: registry-image
+            source: {repository: ubuntu}
+          
+          run:
+            path: bash
+            args:
+              - -c
+              - |
+                echo simple: ((dumb:simple))
+                echo username: ((dumb:user.username))
+                echo password: ((dumb:user.password))

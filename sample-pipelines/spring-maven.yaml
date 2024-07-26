@@ -2,7 +2,17 @@
 # fly -t kaiju trigger-job --job spring-maven/repo-exists --watch --team javagrunt-com
 
 resources:
+  - name: concourse-pipelines
+    icon: github
+    type: git
+    source:
+      uri: https://github.com/dashaun/concourse-pipelines
+      branch: main
+      git_config:
+        - name: safe.directory
+          value: '*'
   - name: repo
+    icon: github
     type: git
     source:
       uri: https://github.com/javagrunt-com/com.javagrunt.service.cleaning
@@ -11,20 +21,12 @@ resources:
         - name: safe.directory
           value: '*'
 jobs:
-  - name: repo-exists
+  - name: unit
     plan:
       - in_parallel:
-          - get: repo
-            trigger: true
-      - task: hello-world-task
-        config:
-          platform: linux
-          image_resource:
-            type: registry-image
-            source:
-              repository: busybox
-          inputs: # add the get step as an input to this task
-            - name: repo
-          run: # read the file from the get step
-            path: cat
-            args: ["repo/README.md"]
+        - get: repo
+          version: latest # Just process the latest Git commit, not every commit (this is the default setting)
+          trigger: true # Trigger this job whenever Concourse detects a new Resource version (i.e. a new Git commit)
+        - get: concourse-pipelines
+      - task: run-unit-tests
+        file: concourse-pipelines/tasks/spring-maven-unit-test.yaml

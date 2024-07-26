@@ -1,0 +1,5 @@
+roles:
+  - name: owner
+    github:
+      teams: ["org:javagrunt-com"]
+      users: ["pinkemma", "colabottles","thiagochirana"]

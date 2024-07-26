@@ -1,0 +1,7 @@
+roles:
+  - name: owner
+    github:
+      teams: ["org:dashaun-demo"]
+  - name: member
+    github:
+      users: ["pinkemma","colabottles","thiagochirana"]
