@@ -1,0 +1,38 @@
+---
+# Task definition
+
+platform: linux
+container_limits: {}
+
+image_resource:
+  type: registry-image
+  source:
+    repository: ubuntu
+    tag: 24.04
+
+# Cache the Maven repository directory
+caches:
+  - path: $HOME/.m2/repository
+
+# We will provide an input called 'src' to this Task
+inputs:
+  - name: source-repo
+outputs:
+  - name: build
+
+# What do we want this task to do?
+# Tell Concourse the commands it should execute, in this Task
+run:
+  path: /bin/bash
+  args:
+    - -c
+    - |
+      apt update
+      apt install -y curl zip unzip
+      curl -s https://get.sdkman.io | bash
+      echo "sdkman_auto_answer=true" > /root/.sdkman/etc/config
+      source "/root/.sdkman/bin/sdkman-init.sh"
+      cd source-repo
+      sdk install java 17.0.11-librca
+      sdk install java 21.0.2-graalce
+      ./mvnw clean test
