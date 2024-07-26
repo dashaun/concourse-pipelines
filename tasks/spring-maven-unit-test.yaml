@@ -8,8 +8,8 @@ container_limits: {}
 image_resource:
   type: registry-image
   source:
-    repository: maven
-    tag: latest
+    repository: ubuntu
+    tag: 24.04
 
 # Cache the Maven repository directory
 caches:
