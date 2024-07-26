@@ -31,6 +31,6 @@ run:
       apt install -y curl zip unzip
       curl -s https://get.sdkman.io | bash
       source "/root/.sdkman/bin/sdkman-init.sh"
-      cd repo
+      cd source-repo
       sdk env install
       ./mvnw clean test
