@@ -28,7 +28,7 @@ run:
   args:
     - -c
     - |
-      mvn -f git/pom.xml test
+      mvn -f repo/pom.xml test
       
       # Make this output available to the 'test' Job
-      cp -R git/* build
+      cp -R repo/* build
