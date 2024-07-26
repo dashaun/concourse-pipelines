@@ -1,0 +1,157 @@
+# fly -t kaiju set-pipeline -p hello-world -c sample-pipelines/hello-world.yaml
+# fly -t kaiju trigger-job --job hello-world/hello-world-job --watch
+
+busybox: &busybox #YAML anchor
+  type: registry-image
+  source:
+    repository: busybox
+
+resources:
+  - name: trigger-daily-between-1am-and-2am
+    type: time
+    source:
+      start: 1:00 AM
+      stop: 2:00 AM
+      location: America/Chicago
+  - name: busybox
+    type: registry-image
+    source:
+      repository: busybox
+  #      username: ((docker.user))
+  #      password: ((docker.password))
+  - name: repo
+    type: git
+    source:
+      uri: https://github.com/dashaun-demo/hello-spring-boot-2-6
+      branch: main
+      git_config:
+        - name: safe.directory
+          value: '*'
+  - name: my-repo
+    type: git
+    source:
+      uri: https://github.com/dashaun-demo/hello-spring-boot-2-6
+      branch: main
+      git_config:
+        - name: safe.directory
+          value: '*'
+  - name: ci
+    type: git
+    source:
+      uri: https://github.com/concourse/examples.git
+      git_config:
+        - name: safe.directory
+          value: '*'
+jobs:
+  - name: hello-world-job
+    plan:
+      - in_parallel:
+          - get: repo
+            trigger: true
+          - get: ci
+          - get: busybox
+      - task: hello-world-task
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: busybox
+          inputs: # add the get step as an input to this task
+            - name: repo
+          run: # read the file from the get step
+            path: cat
+            args: ["repo/README.md"]
+      - task: simple-task
+        image: busybox # use image for task. Overrides anonymous image
+        config:
+          platform: linux
+          run:
+            path: echo
+            args: [ "Hello world!" ]
+      - task: create-one-output
+        config:
+          platform: linux
+          image_resource: *busybox
+          outputs:
+            # Concourse will make an empty dir with this name
+            # and save the contents for later steps
+            - name: the-output
+          run:
+            path: /bin/sh
+            args:
+              - -cx
+              - |
+                ls -lah
+                date > ./the-output/file
+      - task: read-output-from-previous-step
+        config:
+          platform: linux
+          image_resource: *busybox
+          # You must explicitly name the inputs you expect
+          # this task to have.
+          # If you don't then outputs from previous steps
+          # will not appear in the step's container.
+          # The name must match the output from the previous step.
+          # Try removing or renaming the input to see what happens!
+          inputs:
+            - name: the-output
+          run:
+            path: /bin/sh
+            args:
+              - -cx
+              - |
+                ls -lah
+                cat ./the-output/file
+
+  # three pre-gate jobs
+  - name: job-a
+    plan:
+      - get: my-repo
+        trigger: true
+  - name: job-b
+    plan:
+      - get: my-repo
+        trigger: true
+  - name: job-c
+    plan:
+      - get: my-repo
+        trigger: true
+
+  - name: the-gate  # manually trigger this job
+    plan:
+      - get: my-repo
+        trigger: false
+        passed:  # fan-in from the three pre-gate jobs
+          - job-a
+          - job-b
+          - job-c
+
+  # fan-out to three post-gate jobs
+  - name: post-gate-job-a
+    plan:
+      - get: my-repo
+        trigger: true
+        passed: [the-gate]
+  - name: post-gate-job-b
+    plan:
+      - get: my-repo
+        trigger: true
+        passed: [the-gate]
+  - name: post-gate-job-c
+    plan:
+      - get: my-repo
+        trigger: true
+        passed: [the-gate]
+  - name: daily-hello
+    plan:
+      - get: trigger-daily-between-1am-and-2am
+        trigger: true
+      - task: simple-task
+        image: busybox # use image for task. Overrides anonymous image
+        config:
+          platform: linux
+          run:
+            path: echo
+            args: [ "Hello world!" ]
+    

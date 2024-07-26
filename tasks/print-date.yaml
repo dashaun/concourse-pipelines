@@ -1,0 +1,10 @@
+platform: linux
+
+image_resource: # define a default image for the task to use
+  type: registry-image
+  source:
+    repository: busybox
+
+run:
+  path: date
+  args: ["+%Y-%m-%d"]

@@ -1,0 +1,30 @@
+# fly -t kaiju set-pipeline -p spring-maven -c sample-pipelines/advisor-demo.yaml --team dashaun-demo
+# fly -t kaiju trigger-job --job spring-maven/repo-exists --watch --team dashaun-demo
+
+resources:
+  - name: repo
+    type: git
+    source:
+      uri: https://github.com/dashaun-demo/hello-spring-boot-2-6
+      branch: main
+      git_config:
+        - name: safe.directory
+          value: '*'
+jobs:
+  - name: repo-exists
+    plan:
+      - in_parallel:
+          - get: repo
+            trigger: true
+      - task: hello-world-task
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: busybox
+          inputs: # add the get step as an input to this task
+            - name: repo
+          run: # read the file from the get step
+            path: cat
+            args: ["repo/README.md"]
