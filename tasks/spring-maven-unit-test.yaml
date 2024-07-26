@@ -28,6 +28,7 @@ run:
   args:
     - -c
     - |
+      sudo apt install -y curl zip unzip
       curl -s https://get.sdkman.io | bash
       sdk env install
       repo/mvnw test
